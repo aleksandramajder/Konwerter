@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="?android:attr/colorBackground">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Karta jednostki początkowej -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardFrom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSurface">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Z jednostki"
+                        style="@style/TextAppearance.Material3.LabelLarge"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <!-- Dropdown: Wybór jednostki początkowej -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/menuFromContainer"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="Wybierz jednostkę"
+                        app:boxStrokeColor="@color/text_input_box_stroke">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autoCompleteFrom"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            tools:text="Metr"
+                            android:textColor="?attr/colorOnSurface"
+                            style="@style/TextAppearance.Material3.BodyLarge"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Pole tekstowe: Wartość do konwersji -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/textInputLayoutValue"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:hint="Wartość"
+                        app:startIconDrawable="@android:drawable/ic_menu_edit"
+                        app:endIconMode="clear_text"
+                        app:boxStrokeColor="@color/text_input_box_stroke">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextFrom"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal|numberSigned"
+                            android:textColor="?attr/colorOnSurface"
+                            style="@style/TextAppearance.Material3.HeadlineSmall"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Przycisk zamiany -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/buttonSwap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="-12dp"
+                android:layout_marginBottom="-12dp"
+                app:elevation="6dp"
+                app:srcCompat="@android:drawable/stat_notify_sync"
+                app:backgroundTint="?attr/colorSecondary"
+                app:tint="?attr/colorOnSecondary"
+                android:contentDescription="Zamień jednostki" />
+
+
+            <!-- Karta jednostki docelowej -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="?attr/colorSurface">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:paddingTop="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Na jednostkę"
+                        style="@style/TextAppearance.Material3.LabelLarge"
+                        android:textColor="?attr/colorPrimary" />
+
+                    <!-- Dropdown: Wybór jednostki docelowej -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/menuToContainer"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="Wybierz jednostkę"
+                        app:boxStrokeColor="@color/text_input_box_stroke">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autoCompleteTo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            tools:text="Centymetr"
+                            android:textColor="?attr/colorOnSurface"
+                            style="@style/TextAppearance.Material3.BodyLarge"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="Wynik:"
+                        style="@style/TextAppearance.Material3.LabelMedium"
+                        android:textColor="?attr/colorPrimary"/>
+
+                    <TextView
+                        android:id="@+id/textViewResult"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="0"
+                        style="@style/TextAppearance.Material3.HeadlineMedium"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorPrimary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Chart Section (Visible only for Crypto) -->
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/cryptoChart"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="24dp"
+                android:visibility="gone" />
+
+            <!-- Przycisk odświeżania (tylko dla krypto) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonRefresh"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:text="Odśwież kursy"
+                android:visibility="gone"
+                app:icon="@android:drawable/ic_popup_sync"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textStyle="italic" />
+
+            <!-- Informacja pomocnicza -->
+            <TextView
+                android:id="@+id/textViewHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="Wpisz wartość aby zobaczyć konwersję"
+                style="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textStyle="italic" />
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

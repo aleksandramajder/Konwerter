@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Konwerter</string>
+    <string name="settings">Ustawienia</string>
+    <string name="appearance">Wygląd</string>
+    <string name="dark_mode">Tryb ciemny</string>
+    <string name="theme_color">Kolor motywu</string>
+    <string name="calculation">Obliczenia</string>
+    <string name="decimal_places">Miejsca po przecinku</string>
+    <string name="choose_color">Wybierz kolor</string>
+    <string name="choose_theme_mode">Wybierz tryb</string>
+</resources>
