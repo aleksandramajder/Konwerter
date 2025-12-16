@@ -17,40 +17,37 @@ object CryptoRepository {
     private var lastFetchTime: Long = 0
     private const val CACHE_DURATION = 60000L // 1 minuta
 
+    // Usunąłem try-catch stąd, aby błąd trafił do Fragmentu i mógł być obsłużony przez UI
     suspend fun getCryptoUnits(): List<Unit> = withContext(Dispatchers.IO) {
-        try {
-            if (System.currentTimeMillis() - lastFetchTime < CACHE_DURATION && cachedPrices.isNotEmpty()) {
-                return@withContext createUnitsFromCache()
-            }
-
-            val response = api.getCryptoPrices()
-
-            val btcUsd = response.bitcoin?.usd ?: 0.0
-            val btcPln = response.bitcoin?.pln ?: 0.0
-            val btcEur = response.bitcoin?.eur ?: 0.0
-
-            val plnRate = if (btcPln > 0) btcUsd / btcPln else 0.25
-            val eurRate = if (btcEur > 0) btcUsd / btcEur else 1.08
-
-            cachedPrices = mapOf(
-                "BTC" to (response.bitcoin?.usd ?: 0.0),
-                "ETH" to (response.ethereum?.usd ?: 0.0),
-                "USDT" to (response.tether?.usd ?: 1.0),
-                "SOL" to (response.solana?.usd ?: 0.0),
-                "DOGE" to (response.dogecoin?.usd ?: 0.0),
-                "ADA" to (response.cardano?.usd ?: 0.0),
-                "PLN" to plnRate,
-                "EUR" to eurRate
-            )
-
-            lastFetchTime = System.currentTimeMillis()
-
-            createUnitsFromCache()
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            getDefaultCryptoUnits()
+        // Sprawdź czy cache jest świeży
+        if (System.currentTimeMillis() - lastFetchTime < CACHE_DURATION && cachedPrices.isNotEmpty()) {
+            return@withContext createUnitsFromCache()
         }
+
+        // Pobierz świeże dane - jeśli nie ma neta, to rzuci wyjątkiem, który złapiemy we Fragmencie
+        val response = api.getCryptoPrices()
+
+        val btcUsd = response.bitcoin?.usd ?: 0.0
+        val btcPln = response.bitcoin?.pln ?: 0.0
+        val btcEur = response.bitcoin?.eur ?: 0.0
+
+        val plnRate = if (btcPln > 0) btcUsd / btcPln else 0.25
+        val eurRate = if (btcEur > 0) btcUsd / btcEur else 1.08
+
+        cachedPrices = mapOf(
+            "BTC" to (response.bitcoin?.usd ?: 0.0),
+            "ETH" to (response.ethereum?.usd ?: 0.0),
+            "USDT" to (response.tether?.usd ?: 1.0),
+            "SOL" to (response.solana?.usd ?: 0.0),
+            "DOGE" to (response.dogecoin?.usd ?: 0.0),
+            "ADA" to (response.cardano?.usd ?: 0.0),
+            "PLN" to plnRate,
+            "EUR" to eurRate
+        )
+
+        lastFetchTime = System.currentTimeMillis()
+
+        createUnitsFromCache()
     }
 
     suspend fun getHistoricalData(cryptoUnit: Unit, targetCurrencyUnit: Unit, days: String = "7"): List<Pair<Long, Double>> = withContext(Dispatchers.IO) {
@@ -61,7 +58,7 @@ object CryptoRepository {
             val vsCurrency = when(targetCurrencyUnit.symbol) {
                 "PLN" -> "pln"
                 "EUR" -> "eur"
-                else -> "usd"
+                else -> "usd" 
             }
 
             val response = api.getMarketChart(id, vsCurrency, days)
@@ -99,17 +96,6 @@ object CryptoRepository {
             Unit("Solana", "SOL", cachedPrices["SOL"] ?: 100.0, Category.CRYPTO),
             Unit("Dogecoin", "DOGE", cachedPrices["DOGE"] ?: 0.1, Category.CRYPTO),
             Unit("Cardano", "ADA", cachedPrices["ADA"] ?: 0.5, Category.CRYPTO)
-        )
-    }
-
-    private fun getDefaultCryptoUnits(): List<Unit> {
-        return listOf(
-            Unit("US Dollar", "USD", 1.0, Category.CRYPTO),
-            Unit("Polski Złoty", "PLN", 0.25, Category.CRYPTO),
-            Unit("Euro", "EUR", 1.08, Category.CRYPTO),
-            Unit("Bitcoin", "BTC", 50000.0, Category.CRYPTO),
-            Unit("Ethereum", "ETH", 3000.0, Category.CRYPTO),
-            Unit("Tether", "USDT", 1.0, Category.CRYPTO)
         )
     }
 }
