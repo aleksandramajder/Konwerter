@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.konwerter"
+        applicationId = "com.aleksandra.konwerter"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

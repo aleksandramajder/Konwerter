@@ -39,7 +39,7 @@
                         android:layout_height="wrap_content"
                         android:text="Z jednostki"
                         style="@style/TextAppearance.Material3.LabelLarge"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="?attr/colorPrimary" />
 
                     <!-- Dropdown: Wybór jednostki początkowej -->
                     <com.google.android.material.textfield.TextInputLayout
@@ -49,7 +49,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:hint="Wybierz jednostkę"
-                        app:boxStrokeColor="@color/text_input_box_stroke">
+                        app:boxStrokeColor="@color/box_stroke_color">
 
                         <AutoCompleteTextView
                             android:id="@+id/autoCompleteFrom"
@@ -71,7 +71,7 @@
                         android:hint="Wartość"
                         app:startIconDrawable="@android:drawable/ic_menu_edit"
                         app:endIconMode="clear_text"
-                        app:boxStrokeColor="@color/text_input_box_stroke">
+                        app:boxStrokeColor="@color/box_stroke_color">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/editTextFrom"
@@ -131,7 +131,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:hint="Wybierz jednostkę"
-                        app:boxStrokeColor="@color/text_input_box_stroke">
+                        app:boxStrokeColor="@color/box_stroke_color">
 
                         <AutoCompleteTextView
                             android:id="@+id/autoCompleteTo"
@@ -203,3 +203,4 @@
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
+<!-- Updated color -->
