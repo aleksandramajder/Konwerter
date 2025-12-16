@@ -17,14 +17,19 @@ object CryptoRepository {
     private var lastFetchTime: Long = 0
     private const val CACHE_DURATION = 60000L // 1 minuta
 
-    // Usunąłem try-catch stąd, aby błąd trafił do Fragmentu i mógł być obsłużony przez UI
+    // Wyczyść cache - przydatne przy odświeżaniu
+    fun clearCache() {
+        cachedPrices = emptyMap()
+        lastFetchTime = 0
+    }
+
     suspend fun getCryptoUnits(): List<Unit> = withContext(Dispatchers.IO) {
         // Sprawdź czy cache jest świeży
         if (System.currentTimeMillis() - lastFetchTime < CACHE_DURATION && cachedPrices.isNotEmpty()) {
             return@withContext createUnitsFromCache()
         }
 
-        // Pobierz świeże dane - jeśli nie ma neta, to rzuci wyjątkiem, który złapiemy we Fragmencie
+        // Pobierz świeże dane
         val response = api.getCryptoPrices()
 
         val btcUsd = response.bitcoin?.usd ?: 0.0
@@ -50,15 +55,18 @@ object CryptoRepository {
         createUnitsFromCache()
     }
 
-    suspend fun getHistoricalData(cryptoUnit: Unit, targetCurrencyUnit: Unit, days: String = "7"): List<Pair<Long, Double>> = withContext(Dispatchers.IO) {
+    suspend fun getHistoricalData(
+        cryptoUnit: Unit,
+        targetCurrencyUnit: Unit,
+        days: String = "7"
+    ): List<Pair<Long, Double>> = withContext(Dispatchers.IO) {
         try {
-            val id = getCoinId(cryptoUnit.symbol)
-            if (id == null) return@withContext emptyList()
+            val id = getCoinId(cryptoUnit.symbol) ?: return@withContext emptyList()
 
             val vsCurrency = when(targetCurrencyUnit.symbol) {
                 "PLN" -> "pln"
                 "EUR" -> "eur"
-                else -> "usd" 
+                else -> "usd"
             }
 
             val response = api.getMarketChart(id, vsCurrency, days)
@@ -68,7 +76,7 @@ object CryptoRepository {
             emptyList()
         }
     }
-    
+
     fun isCrypto(unit: Unit): Boolean {
         return getCoinId(unit.symbol) != null
     }

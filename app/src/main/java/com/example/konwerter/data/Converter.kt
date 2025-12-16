@@ -20,14 +20,21 @@ object Converter {
         val celsius = when (fromUnit.symbol) {
             "°C" -> value
             "°F" -> (value - 32) * 5.0 / 9.0
-            "K" -> value - 273.15
+            "K" -> {
+                if (value < 0) throw IllegalArgumentException("Temperatura w Kelvinach nie może być ujemna")
+                value - 273.15
+            }
             else -> value
         }
 
         return when (toUnit.symbol) {
             "°C" -> celsius
             "°F" -> celsius * 9.0 / 5.0 + 32
-            "K" -> celsius + 273.15
+            "K" -> {
+                val kelvin = celsius + 273.15
+                if (kelvin < 0) throw IllegalArgumentException("Wynik nie może być ujemny w Kelvinach")
+                kelvin
+            }
             else -> celsius
         }
     }

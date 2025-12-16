@@ -1,6 +1,6 @@
 package com.example.konwerter.data
 
-data class CrypoPrice(
+data class CryptoPrice(
     val symbol: String,
     val name: String,
     val priceUsd: Double,
