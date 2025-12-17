@@ -1,5 +1,6 @@
 package com.example.konwerter
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
@@ -29,8 +30,12 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnDone.setOnClickListener {
             finish()
         }
+
+        binding.privacyPolicyButton.setOnClickListener {
+            startActivity(Intent(this, PrivacyActivity::class.java))
+        }
     }
-    
+
     override fun onSupportNavigateUp(): Boolean {
         onBackPressedDispatcher.onBackPressed()
         return true
@@ -54,12 +59,13 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun setupThemeMode() {
         val currentMode = PreferencesManager.getThemeMode(this)
-        val checkedId = when (currentMode) {
-            AppCompatDelegate.MODE_NIGHT_NO -> R.id.btnThemeLight
-            AppCompatDelegate.MODE_NIGHT_YES -> R.id.btnThemeDark
-            else -> R.id.btnThemeSystem
-        }
-        binding.toggleThemeMode.check(checkedId)
+        binding.toggleThemeMode.check(
+            when (currentMode) {
+                AppCompatDelegate.MODE_NIGHT_NO -> R.id.btnThemeLight
+                AppCompatDelegate.MODE_NIGHT_YES -> R.id.btnThemeDark
+                else -> R.id.btnThemeSystem
+            }
+        )
 
         binding.toggleThemeMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
@@ -95,30 +101,20 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun setAppTheme(color: String) {
         PreferencesManager.setColorTheme(this, color)
-        updateColorSelection(color)
-
         recreate()
     }
 
     private fun setupDecimalPlaces() {
         val places = listOf("2", "4", "6", "8", "10")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, places)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerDecimalPlaces.adapter = adapter
+        binding.autoCompleteDecimalPlaces.setAdapter(adapter)
 
         val currentDecimal = PreferencesManager.getDecimalPlaces(this)
-        val position = places.indexOf(currentDecimal.toString())
-        if (position >= 0) {
-            binding.spinnerDecimalPlaces.setSelection(position)
-        }
+        binding.autoCompleteDecimalPlaces.setText(currentDecimal.toString(), false)
 
-        binding.spinnerDecimalPlaces.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selected = places[position].toInt()
-                PreferencesManager.setDecimalPlaces(this@SettingsActivity, selected)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        binding.autoCompleteDecimalPlaces.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            val selected = places[position].toInt()
+            PreferencesManager.setDecimalPlaces(this@SettingsActivity, selected)
         }
     }
 }

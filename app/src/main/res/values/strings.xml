@@ -8,4 +8,17 @@
     <string name="decimal_places">Miejsca po przecinku</string>
     <string name="choose_color">Wybierz kolor</string>
     <string name="choose_theme_mode">Wybierz tryb</string>
+
+    <string name="privacy_policy_html">
+        <![CDATA[
+            <h1>Polityka Prywatności dla Konwerter</h1>
+            <p>Ta Polityka Prywatności opisuje, jak Twoje dane są obsługiwane w aplikacji Konwerter.</p>
+            <h2>Gromadzenie i wykorzystywanie danych</h2>
+            <p>Aplikacja Konwerter **nie gromadzi, nie przechowuje ani nie udostępnia** żadnych danych osobowych użytkowników.</p>
+            <h2>Połączenie z internetem</h2>
+            <p>Aplikacja łączy się z internetem w celu pobierania aktualnych kursów kryptowalut z publicznie dostępnego API CoinGecko. Żadne dane identyfikujące użytkownika nie są wysyłane podczas tych zapytań.</p>
+            <h2>Kontakt</h2>
+            <p>W przypadku pytań dotyczących tej Polityki Prywatności, prosimy o kontakt pod adresem: aleksandradevv@gmail.com</p>
+        ]]>
+    </string>
 </resources>

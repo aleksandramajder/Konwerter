@@ -15,21 +15,18 @@ object CryptoRepository {
 
     private var cachedPrices: Map<String, Double> = emptyMap()
     private var lastFetchTime: Long = 0
-    private const val CACHE_DURATION = 60000L // 1 minuta
+    private const val CACHE_DURATION = 60000L
 
-    // Wyczyść cache - przydatne przy odświeżaniu
     fun clearCache() {
         cachedPrices = emptyMap()
         lastFetchTime = 0
     }
 
     suspend fun getCryptoUnits(): List<Unit> = withContext(Dispatchers.IO) {
-        // Sprawdź czy cache jest świeży
         if (System.currentTimeMillis() - lastFetchTime < CACHE_DURATION && cachedPrices.isNotEmpty()) {
             return@withContext createUnitsFromCache()
         }
 
-        // Pobierz świeże dane
         val response = api.getCryptoPrices()
 
         val btcUsd = response.bitcoin?.usd ?: 0.0

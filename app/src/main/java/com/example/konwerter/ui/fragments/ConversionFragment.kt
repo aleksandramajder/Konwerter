@@ -10,6 +10,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.konwerter.R
 import com.example.konwerter.data.Category
 import com.example.konwerter.data.Converter
@@ -23,12 +24,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,8 +42,6 @@ class ConversionFragment : Fragment() {
     private var retryCount = 0
 
     private var decimalFormat = DecimalFormat("#.########")
-
-    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,11 +74,9 @@ class ConversionFragment : Fragment() {
 
     private fun loadCryptoUnits() {
         showLoading(true)
-        coroutineScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                units = withContext(Dispatchers.IO) {
-                    CryptoRepository.getCryptoUnits()
-                }
+                units = CryptoRepository.getCryptoUnits()
                 if (_binding != null) {
                     showError(false)
                     setupUI()
@@ -109,12 +101,11 @@ class ConversionFragment : Fragment() {
             showError(true, "Błąd sieci. Spróbuj ponownie później.")
             binding.retryButton.isEnabled = false
         } else {
-            showError(true)
+            showError(true, "Brak połączenia z internetem.")
         }
     }
 
     private fun showLoading(isLoading: Boolean) {
-        // Możesz dodać ProgressBar jeśli chcesz
         binding.mainContent.alpha = if (isLoading) 0.5f else 1.0f
     }
 
@@ -158,32 +149,39 @@ class ConversionFragment : Fragment() {
 
         val unitNames = units.map { "${it.name} (${it.symbol})" }
 
-        val adapterFrom = ArrayAdapter(requireContext(), R.layout.list_item, unitNames)
-        binding.autoCompleteFrom.setAdapter(adapterFrom)
+        val adapter = ArrayAdapter(requireContext(), R.layout.list_item, unitNames)
+        binding.autoCompleteFrom.setAdapter(adapter)
+        binding.autoCompleteTo.setAdapter(adapter)
 
-        val adapterTo = ArrayAdapter(requireContext(), R.layout.list_item, unitNames)
-        binding.autoCompleteTo.setAdapter(adapterTo)
-
-        // Ustaw domyślne wartości
         if (units.isNotEmpty()) {
-            binding.autoCompleteFrom.setText(unitNames[0], false)
-            fromUnit = units[0]
-
-            if (units.size > 1) {
+            if (fromUnit == null) {
+                binding.autoCompleteFrom.setText(unitNames[0], false)
+                fromUnit = units[0]
+            }
+            if (toUnit == null && units.size > 1) {
                 binding.autoCompleteTo.setText(unitNames[1], false)
                 toUnit = units[1]
+            }
+            
+            if (category == Category.CRYPTO) {
+                loadChartData()
             }
         }
 
         binding.autoCompleteFrom.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             fromUnit = units[position]
             performConversion()
+            if (category == Category.CRYPTO) {
+                loadChartData()
+            }
         }
 
         binding.autoCompleteTo.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             toUnit = units[position]
             performConversion()
-            loadChartData()
+            if (category == Category.CRYPTO) {
+                loadChartData()
+            }
         }
     }
 
@@ -210,7 +208,18 @@ class ConversionFragment : Fragment() {
     private fun performConversion() {
         val inputText = binding.editTextFrom.text.toString()
 
-        if (inputText.isEmpty() || fromUnit == null || toUnit == null) {
+        if (fromUnit == null || toUnit == null) {
+            binding.textViewResult.text = "0"
+            return
+        }
+
+        if (category == Category.CRYPTO) {
+             binding.buttonSwap.isEnabled = true
+             binding.textViewHint.text = "Wpisz wartość aby zobaczyć konwersję"
+             binding.cryptoChart.visibility = View.VISIBLE
+        }
+
+        if (inputText.isEmpty()) {
             binding.textViewResult.text = "0"
             return
         }
@@ -229,24 +238,35 @@ class ConversionFragment : Fragment() {
     private fun loadChartData() {
         if (category != Category.CRYPTO || fromUnit == null || toUnit == null) return
 
-        val fromUnitVal = fromUnit ?: return
-        val toUnitVal = toUnit ?: return
+        val (crypto, fiat) = when {
+            CryptoRepository.isCrypto(fromUnit!!) -> fromUnit!! to toUnit!!
+            CryptoRepository.isCrypto(toUnit!!) -> toUnit!! to fromUnit!!
+            else -> {
+                binding.cryptoChart.clear()
+                binding.cryptoChart.setNoDataText("Wykres dostępny tylko dla par z kryptowalutą")
+                binding.cryptoChart.invalidate()
+                return
+            }
+        }
 
-        // Sprawdź czy fromUnit jest kryptowalutą
-        if (!CryptoRepository.isCrypto(fromUnitVal)) return
-
-        coroutineScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val history = withContext(Dispatchers.IO) {
-                    CryptoRepository.getHistoricalData(fromUnitVal, toUnitVal, "7")
-                }
+                val history = CryptoRepository.getHistoricalData(crypto, fiat, "7")
 
-                if (history.isNotEmpty()) {
-                    updateChart(history, "${fromUnitVal.symbol}/${toUnitVal.symbol}")
+                if (history.isNotEmpty() && _binding != null) {
+                    updateChart(history, "${crypto.symbol}/${fiat.symbol}")
+                } else if (_binding != null) {
+                    binding.cryptoChart.clear()
+                    binding.cryptoChart.setNoDataText("Brak danych historycznych dla tej pary.")
+                    binding.cryptoChart.invalidate()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Nie pokazuj błędu dla wykresu, to opcjonalna funkcja
+                if (_binding != null) {
+                    binding.cryptoChart.clear()
+                    binding.cryptoChart.setNoDataText("Błąd ładowania wykresu.")
+                    binding.cryptoChart.invalidate()
+                }
             }
         }
     }
@@ -312,11 +332,6 @@ class ConversionFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        coroutineScope.cancel()
     }
 
     companion object {

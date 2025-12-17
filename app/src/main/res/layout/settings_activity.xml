@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
@@ -10,12 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel"
+        app:navigationIcon="@drawable/ic_arrow_back"
         app:title="@string/settings"
-        app:titleTextColor="@android:color/white"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:titleTextColor="?attr/colorOnPrimary" />
 
-    <androidx.core.widget.NestedScrollView
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -33,14 +33,13 @@
                 android:layout_height="wrap_content"
                 android:text="@string/appearance"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                style="@style/TextAppearance.Material3.LabelLarge" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:cardCornerRadius="8dp"
+                app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
                 <LinearLayout
@@ -60,7 +59,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/dark_mode"
-                            android:textSize="16sp" />
+                            style="@style/TextAppearance.Material3.BodyLarge" />
 
                         <com.google.android.material.button.MaterialButtonToggleGroup
                             android:id="@+id/toggleThemeMode"
@@ -109,7 +108,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/theme_color"
-                            android:textSize="16sp" />
+                            style="@style/TextAppearance.Material3.BodyLarge" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -172,14 +171,13 @@
                 android:layout_marginTop="24dp"
                 android:text="@string/calculation"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                style="@style/TextAppearance.Material3.LabelLarge" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:cardCornerRadius="8dp"
+                app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
                 <LinearLayout
@@ -199,24 +197,43 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/decimal_places"
-                            android:textSize="16sp" />
+                            style="@style/TextAppearance.Material3.BodyLarge" />
 
-                        <Spinner
-                            android:id="@+id/spinnerDecimalPlaces"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/menuDecimalPlaces"
+                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:minWidth="100dp" />
+                            android:minWidth="100dp">
+                            
+                            <AutoCompleteTextView
+                                android:id="@+id/autoCompleteDecimalPlaces"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none" />
+                                
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Przycisk Gotowe -->
-            <Button
+            <!-- Polityka Prywatności -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/privacyPolicyButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:text="Polityka Prywatności" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="16dp"
                 android:text="Gotowe" />
+
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

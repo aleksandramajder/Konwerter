@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupViewPager() {
-        val categories = Category.values().toList()
+        val categories = Category.entries
 
         val adapter = CategoryPagerAdapter(this, categories)
         binding.viewPager.adapter = adapter
