@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.konwerter"
-    compileSdk = 34
+    compileSdk = 35
 
     buildFeatures {
         viewBinding = true
@@ -14,8 +14,8 @@ android {
     defaultConfig {
         applicationId = "com.aleksandra.konwerter"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
+        targetSdk = 35
+        versionCode = 2
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

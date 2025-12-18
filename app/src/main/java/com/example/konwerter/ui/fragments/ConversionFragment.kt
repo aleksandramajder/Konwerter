@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -51,7 +52,7 @@ class ConversionFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         if (category == Category.CRYPTO) {
-            loadCryptoUnits()
+            loadCryptoUnits(isInitialLoad = true)
         } else {
             units = UnitRepository.getUnitsForCategory(category)
             setupUI()
@@ -72,7 +73,7 @@ class ConversionFragment : Fragment() {
         decimalFormat = DecimalFormat(pattern)
     }
 
-    private fun loadCryptoUnits() {
+    private fun loadCryptoUnits(isInitialLoad: Boolean = false) {
         showLoading(true)
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -85,7 +86,11 @@ class ConversionFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 if (_binding != null) {
-                    handleNetworkError()
+                    if (isInitialLoad) {
+                        handleNetworkError()
+                    } else {
+                        Toast.makeText(requireContext(), "Nie udało się odświeżyć kursów", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } finally {
                 if (_binding != null) {
@@ -129,7 +134,7 @@ class ConversionFragment : Fragment() {
 
         binding.retryButton.setOnClickListener {
             retryCount = 0
-            loadCryptoUnits()
+            loadCryptoUnits(isInitialLoad = true)
         }
 
         binding.buttonSwap.setOnClickListener {
@@ -277,22 +282,29 @@ class ConversionFragment : Fragment() {
         val entries = history.mapIndexed { index, pair ->
             Entry(index.toFloat(), pair.second.toFloat())
         }
+        
+        val typedValue = android.util.TypedValue()
+        requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
+        val primaryColor = typedValue.data
 
         val dataSet = LineDataSet(entries, label).apply {
-            color = ContextCompat.getColor(requireContext(), R.color.blue_primary)
-            setCircleColor(ContextCompat.getColor(requireContext(), R.color.blue_primary))
-            lineWidth = 2f
-            circleRadius = 3f
+            color = primaryColor
+            setDrawCircles(false)
+            lineWidth = 2.5f
             setDrawValues(false)
             mode = LineDataSet.Mode.CUBIC_BEZIER
+            setDrawFilled(true)
+            fillColor = primaryColor
+            fillAlpha = 60
         }
 
         binding.cryptoChart.apply {
             data = LineData(dataSet)
             description.isEnabled = false
-            legend.isEnabled = true
+            legend.textColor = primaryColor
 
             xAxis.apply {
+                textColor = primaryColor
                 position = XAxis.XAxisPosition.BOTTOM
                 setDrawGridLines(false)
                 valueFormatter = object : ValueFormatter() {
@@ -307,7 +319,10 @@ class ConversionFragment : Fragment() {
                 }
             }
 
-            axisLeft.setDrawGridLines(true)
+            axisLeft.apply {
+                textColor = primaryColor
+                setDrawGridLines(true)
+            }
             axisRight.isEnabled = false
 
             invalidate()
