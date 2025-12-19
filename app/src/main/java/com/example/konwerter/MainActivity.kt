@@ -6,6 +6,9 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.konwerter.data.Category
 import com.example.konwerter.databinding.ActivityMainBinding
 import com.example.konwerter.ui.adapters.CategoryPagerAdapter
@@ -20,8 +23,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         applyTheme()
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
@@ -42,8 +52,8 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(themeMode)
 
         val colorTheme = PreferencesManager.getColorTheme(this)
-        appliedTheme = colorTheme // Store the theme name
-        
+        appliedTheme = colorTheme
+
         val themeId = when (colorTheme) {
             "Blue" -> R.style.Theme_Konwerter_Blue
             "Green" -> R.style.Theme_Konwerter_Green

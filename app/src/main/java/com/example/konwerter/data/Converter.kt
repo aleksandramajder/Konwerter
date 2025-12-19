@@ -2,7 +2,7 @@ package com.example.konwerter.data
 
 object Converter {
 
-    fun convert(value: Double, fromUnit: Unit, toUnit: Unit): Double {
+    fun convert(value: Double, fromUnit: ConversionUnit, toUnit: ConversionUnit): Double {
         if (fromUnit.category != toUnit.category) {
             throw IllegalArgumentException("Nie można konwertować między różnymi kategoriami")
         }
@@ -16,7 +16,7 @@ object Converter {
         return baseValue / toUnit.toBase
     }
 
-    private fun convertTemperature(value: Double, fromUnit: Unit, toUnit: Unit): Double {
+    private fun convertTemperature(value: Double, fromUnit: ConversionUnit, toUnit: ConversionUnit): Double {
         val celsius = when (fromUnit.symbol) {
             "°C" -> value
             "°F" -> (value - 32) * 5.0 / 9.0

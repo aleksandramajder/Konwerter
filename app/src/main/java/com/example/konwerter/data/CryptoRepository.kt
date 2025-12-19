@@ -22,7 +22,7 @@ object CryptoRepository {
         lastFetchTime = 0
     }
 
-    suspend fun getCryptoUnits(): List<Unit> = withContext(Dispatchers.IO) {
+    suspend fun getCryptoUnits(): List<ConversionUnit> = withContext(Dispatchers.IO) {
         if (System.currentTimeMillis() - lastFetchTime < CACHE_DURATION && cachedPrices.isNotEmpty()) {
             return@withContext createUnitsFromCache()
         }
@@ -53,8 +53,8 @@ object CryptoRepository {
     }
 
     suspend fun getHistoricalData(
-        cryptoUnit: Unit,
-        targetCurrencyUnit: Unit,
+        cryptoUnit: ConversionUnit,
+        targetCurrencyUnit: ConversionUnit,
         days: String = "7"
     ): List<Pair<Long, Double>> = withContext(Dispatchers.IO) {
         try {
@@ -74,7 +74,7 @@ object CryptoRepository {
         }
     }
 
-    fun isCrypto(unit: Unit): Boolean {
+    fun isCrypto(unit: ConversionUnit): Boolean {
         return getCoinId(unit.symbol) != null
     }
 
@@ -90,17 +90,17 @@ object CryptoRepository {
         }
     }
 
-    private fun createUnitsFromCache(): List<Unit> {
+    private fun createUnitsFromCache(): List<ConversionUnit> {
         return listOf(
-            Unit("US Dollar", "USD", 1.0, Category.CRYPTO),
-            Unit("Polski Złoty", "PLN", cachedPrices["PLN"] ?: 0.25, Category.CRYPTO),
-            Unit("Euro", "EUR", cachedPrices["EUR"] ?: 1.08, Category.CRYPTO),
-            Unit("Bitcoin", "BTC", cachedPrices["BTC"] ?: 50000.0, Category.CRYPTO),
-            Unit("Ethereum", "ETH", cachedPrices["ETH"] ?: 3000.0, Category.CRYPTO),
-            Unit("Tether", "USDT", cachedPrices["USDT"] ?: 1.0, Category.CRYPTO),
-            Unit("Solana", "SOL", cachedPrices["SOL"] ?: 100.0, Category.CRYPTO),
-            Unit("Dogecoin", "DOGE", cachedPrices["DOGE"] ?: 0.1, Category.CRYPTO),
-            Unit("Cardano", "ADA", cachedPrices["ADA"] ?: 0.5, Category.CRYPTO)
+            ConversionUnit("US Dollar", "USD", 1.0, Category.CRYPTO),
+            ConversionUnit("Polski Złoty", "PLN", cachedPrices["PLN"] ?: 0.25, Category.CRYPTO),
+            ConversionUnit("Euro", "EUR", cachedPrices["EUR"] ?: 1.08, Category.CRYPTO),
+            ConversionUnit("Bitcoin", "BTC", cachedPrices["BTC"] ?: 50000.0, Category.CRYPTO),
+            ConversionUnit("Ethereum", "ETH", cachedPrices["ETH"] ?: 3000.0, Category.CRYPTO),
+            ConversionUnit("Tether", "USDT", cachedPrices["USDT"] ?: 1.0, Category.CRYPTO),
+            ConversionUnit("Solana", "SOL", cachedPrices["SOL"] ?: 100.0, Category.CRYPTO),
+            ConversionUnit("Dogecoin", "DOGE", cachedPrices["DOGE"] ?: 0.1, Category.CRYPTO),
+            ConversionUnit("Cardano", "ADA", cachedPrices["ADA"] ?: 0.5, Category.CRYPTO)
         )
     }
 }

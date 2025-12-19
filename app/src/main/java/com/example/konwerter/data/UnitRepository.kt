@@ -1,8 +1,7 @@
 package com.example.konwerter.data
 
 object UnitRepository {
-
-    fun getUnitsForCategory(category: Category): List<Unit> {
+    fun getUnitsForCategory(category: Category): List<ConversionUnit> {
         return when (category) {
             Category.LENGTH -> getLengthUnits()
             Category.MASS -> getMassUnits()
@@ -15,70 +14,69 @@ object UnitRepository {
         }
     }
 
-    private fun getLengthUnits() = listOf(
-        Unit("Milimetr", "mm", 0.001, Category.LENGTH),
-        Unit("Centymetr", "cm", 0.01, Category.LENGTH),
-        Unit("Metr", "m", 1.0, Category.LENGTH),
-        Unit("Kilometr", "km", 1000.0, Category.LENGTH),
-        Unit("Cal", "in", 0.0254, Category.LENGTH),
-        Unit("Stopa", "ft", 0.3048, Category.LENGTH),
-        Unit("Jard", "yd", 0.9144, Category.LENGTH),
-        Unit("Mila", "mi", 1609.34, Category.LENGTH)
-    )
+    private fun getLengthUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Metr", "m", 1.0, Category.LENGTH),
+            ConversionUnit("Kilometr", "km", 1000.0, Category.LENGTH),
+            ConversionUnit("Centymetr", "cm", 0.01, Category.LENGTH),
+            ConversionUnit("Milimetr", "mm", 0.001, Category.LENGTH),
+            ConversionUnit("Mila", "mi", 1609.34, Category.LENGTH),
+            ConversionUnit("Jard", "yd", 0.9144, Category.LENGTH),
+            ConversionUnit("Stopa", "ft", 0.3048, Category.LENGTH),
+            ConversionUnit("Cal", "in", 0.0254, Category.LENGTH)
+        )
+    }
 
-    private fun getMassUnits() = listOf(
-        Unit("Miligram", "mg", 0.000001, Category.MASS),
-        Unit("Gram", "g", 0.001, Category.MASS),
-        Unit("Dekagram","dkg", 0.01, Category.MASS),
-        Unit("Kilogram", "kg", 1.0, Category.MASS),
-        Unit("Tona", "t", 1000.0, Category.MASS),
-    )
+    private fun getMassUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Gram", "g", 1.0, Category.MASS),
+            ConversionUnit("Kilogram", "kg", 1000.0, Category.MASS),
+            ConversionUnit("Miligram", "mg", 0.001, Category.MASS),
+            ConversionUnit("Tona", "t", 1000000.0, Category.MASS),
+            ConversionUnit("Funt", "lb", 453.592, Category.MASS),
+            ConversionUnit("Uncja", "oz", 28.3495, Category.MASS)
+        )
+    }
 
-    private fun getTemperatureUnits() = listOf(
-        Unit("Celsius", "°C", 1.0, Category.TEMPERATURE),
-        Unit("Fahrenheit", "°F", 1.0, Category.TEMPERATURE),
-        Unit("Kelvin", "K", 1.0, Category.TEMPERATURE)
-    )
+    private fun getTemperatureUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Celsjusz", "°C", 0.0, Category.TEMPERATURE),
+            ConversionUnit("Fahrenheit", "°F", 0.0, Category.TEMPERATURE),
+            ConversionUnit("Kelwin", "K", 0.0, Category.TEMPERATURE)
+        )
+    }
 
-    private fun getVolumeUnits() = listOf(
-        Unit("Milimetr sześcienny", "mm³", 0.000001, Category.VOLUME),
-        Unit("Centymetr sześcienny", "cm³", 0.001, Category.VOLUME),
-        Unit("Mililitr", "ml", 0.001, Category.VOLUME),
-        Unit("Litr", "l", 1.0, Category.VOLUME),
-        Unit("Metr sześcienny", "m³", 1000.0, Category.VOLUME),
-        Unit("Uncja płynna (US)", "fl oz", 0.0295735, Category.VOLUME),
-        Unit("Galon (US)", "gal", 3.78541, Category.VOLUME)
-    )
+    private fun getVolumeUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Litr", "l", 1.0, Category.VOLUME),
+            ConversionUnit("Mililitr", "ml", 0.001, Category.VOLUME),
+            ConversionUnit("Galon", "gal", 3.78541, Category.VOLUME)
+        )
+    }
 
-    private fun getAreaUnits() = listOf(
-        Unit("Milimetr kwadratowy", "mm²", 0.000001, Category.AREA),
-        Unit("Centymetr kwadratowy", "cm²", 0.0001, Category.AREA),
-        Unit("Metr kwadratowy", "m²", 1.0, Category.AREA),
-        Unit("Kilometr kwadratowy", "km²", 1000000.0, Category.AREA),
-        Unit("Hektar", "ha", 10000.0, Category.AREA),
-        Unit("Ar", "a", 100.0, Category.AREA),
-    )
+    private fun getAreaUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Metr kwadratowy", "m²", 1.0, Category.AREA),
+            ConversionUnit("Kilometr kwadratowy", "km²", 1000000.0, Category.AREA),
+            ConversionUnit("Hektar", "ha", 10000.0, Category.AREA),
+            ConversionUnit("Ar", "a", 100.0, Category.AREA)
+        )
+    }
 
-    private fun getSpeedUnits() = listOf(
-        Unit("Milimetr na sekundę", "mm/s", 0.001, Category.SPEED),
-        Unit("Centymetr na sekundę", "cm/s", 0.01, Category.SPEED),
-        Unit("Metr na sekundę", "m/s", 1.0, Category.SPEED),
-        Unit("Metr na minutę", "m/min", 0.0166667, Category.SPEED),
-        Unit("Kilometr na godzinę", "km/h", 0.277778, Category.SPEED),
-        Unit("Mila na godzinę", "mph", 0.44704, Category.SPEED),
-        Unit("Mach (prędkość dźwięku w powietrzu)", "Ma", 343.0, Category.SPEED),
-        Unit("Prędkość światła (w próżni)", "c", 299792458.0, Category.SPEED)
-    )
+    private fun getSpeedUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Metry na sekundę", "m/s", 1.0, Category.SPEED),
+            ConversionUnit("Kilometry na godzinę", "km/h", 0.277778, Category.SPEED),
+            ConversionUnit("Mile na godzinę", "mph", 0.44704, Category.SPEED)
+        )
+    }
 
-    private fun getTimeUnits() = listOf(
-        Unit("Milisekunda", "ms", 0.001, Category.TIME),
-        Unit("Sekunda", "s", 1.0, Category.TIME),
-        Unit("Minuta", "min", 60.0, Category.TIME),
-        Unit("Kwadrans", "15 min", 900.0, Category.TIME),
-        Unit("Godzina", "h", 3600.0, Category.TIME),
-        Unit("Dzień", "d", 86400.0, Category.TIME),
-        Unit("Tydzień", "wk", 604800.0, Category.TIME),
-        Unit("Miesiąc (30 dni)", "mth", 2592000.0, Category.TIME),
-        Unit("Rok", "yr", 31536000.0, Category.TIME),
-    )
+    private fun getTimeUnits(): List<ConversionUnit> {
+        return listOf(
+            ConversionUnit("Sekunda", "s", 1.0, Category.TIME),
+            ConversionUnit("Minuta", "min", 60.0, Category.TIME),
+            ConversionUnit("Godzina", "h", 3600.0, Category.TIME),
+            ConversionUnit("Dzień", "d", 86400.0, Category.TIME)
+        )
+    }
 }

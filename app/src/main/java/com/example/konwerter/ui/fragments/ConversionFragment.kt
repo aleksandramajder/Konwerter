@@ -16,7 +16,7 @@ import com.example.konwerter.R
 import com.example.konwerter.data.Category
 import com.example.konwerter.data.Converter
 import com.example.konwerter.data.CryptoRepository
-import com.example.konwerter.data.Unit
+import com.example.konwerter.data.ConversionUnit
 import com.example.konwerter.data.UnitRepository
 import com.example.konwerter.databinding.FragmentConversionBinding
 import com.example.konwerter.utils.PreferencesManager
@@ -25,6 +25,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -37,10 +38,12 @@ class ConversionFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var category: Category
-    private var units: List<Unit> = emptyList()
-    private var fromUnit: Unit? = null
-    private var toUnit: Unit? = null
+    private var units: List<ConversionUnit> = emptyList()
+    private var fromUnit: ConversionUnit? = null
+    private var toUnit: ConversionUnit? = null
     private var retryCount = 0
+    private var isListenersSetup = false
+    private var chartJob: Job? = null
 
     private var decimalFormat = DecimalFormat("#.########")
 
@@ -63,7 +66,9 @@ class ConversionFragment : Fragment() {
         if (_binding == null) return
         updateDecimalFormat()
         setupDropdowns()
-        setupInputListeners()
+        if (!isListenersSetup) {
+            setupInputListeners()
+        }
         setupCryptoUI()
     }
 
@@ -73,15 +78,17 @@ class ConversionFragment : Fragment() {
         decimalFormat = DecimalFormat(pattern)
     }
 
-    private fun loadCryptoUnits(isInitialLoad: Boolean = false) {
+    private fun loadCryptoUnits(isInitialLoad: Boolean = false, onComplete: (() -> Unit)? = null) {
         showLoading(true)
+        binding.buttonRefresh?.isEnabled = false
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 units = CryptoRepository.getCryptoUnits()
                 if (_binding != null) {
                     showError(false)
-                    setupUI()
                     retryCount = 0
+                    onComplete?.invoke() ?: setupUI()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -89,14 +96,28 @@ class ConversionFragment : Fragment() {
                     if (isInitialLoad) {
                         handleNetworkError()
                     } else {
-                        Toast.makeText(requireContext(), "Nie udało się odświeżyć kursów", Toast.LENGTH_SHORT).show()
+                        val message = if (e is java.net.SocketTimeoutException) "Przekroczono limit czasu żądania" else "Nie udało się odświeżyć kursów"
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
                     }
                 }
             } finally {
                 if (_binding != null) {
                     showLoading(false)
+                    binding.buttonRefresh?.isEnabled = true
                 }
             }
+        }
+    }
+
+    private fun refreshCryptoUnits() {
+        val fromSymbol = fromUnit?.symbol
+        val toSymbol = toUnit?.symbol
+
+        loadCryptoUnits {
+            fromUnit = units.find { it.symbol == fromSymbol } ?: units.getOrNull(0)
+            toUnit = units.find { it.symbol == toSymbol } ?: units.getOrNull(1)
+
+            setupUI()
         }
     }
 
@@ -130,9 +151,44 @@ class ConversionFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         if (category != Category.CRYPTO) {
             setupUI()
+        } else {
+            if (!isListenersSetup) {
+                setupInputListeners()
+            }
         }
+    }
+
+    private fun setupDropdowns() {
+        if (units.isEmpty()) return
+
+        val unitNames = units.map { "${it.name} (${it.symbol})" }
+        val adapter = ArrayAdapter(requireContext(), R.layout.list_item, unitNames)
+        binding.autoCompleteFrom.setAdapter(adapter)
+        binding.autoCompleteTo.setAdapter(adapter)
+
+        val fromIndex = units.indexOfFirst { it.symbol == fromUnit?.symbol }.takeIf { it != -1 } ?: 0
+        val toIndex = units.indexOfFirst { it.symbol == toUnit?.symbol }.takeIf { it != -1 } ?: if (units.size > 1) 1 else 0
+
+        if (units.isNotEmpty()) {
+            binding.autoCompleteFrom.setText(unitNames[fromIndex], false)
+            fromUnit = units[fromIndex]
+
+            if (units.size > 1) {
+                binding.autoCompleteTo.setText(unitNames[toIndex], false)
+                toUnit = units[toIndex]
+            }
+
+            if (category == Category.CRYPTO) {
+                loadChartData()
+            }
+        }
+    }
+
+    private fun setupInputListeners() {
+        if(isListenersSetup) return
 
         binding.retryButton.setOnClickListener {
+            binding.retryButton.isEnabled = false
             retryCount = 0
             loadCryptoUnits(isInitialLoad = true)
         }
@@ -144,35 +200,18 @@ class ConversionFragment : Fragment() {
         binding.buttonRefresh?.setOnClickListener {
             if (category == Category.CRYPTO) {
                 CryptoRepository.clearCache()
-                loadCryptoUnits()
-            }
-        }
-    }
-
-    private fun setupDropdowns() {
-        if (units.isEmpty()) return
-
-        val unitNames = units.map { "${it.name} (${it.symbol})" }
-
-        val adapter = ArrayAdapter(requireContext(), R.layout.list_item, unitNames)
-        binding.autoCompleteFrom.setAdapter(adapter)
-        binding.autoCompleteTo.setAdapter(adapter)
-
-        if (units.isNotEmpty()) {
-            if (fromUnit == null) {
-                binding.autoCompleteFrom.setText(unitNames[0], false)
-                fromUnit = units[0]
-            }
-            if (toUnit == null && units.size > 1) {
-                binding.autoCompleteTo.setText(unitNames[1], false)
-                toUnit = units[1]
-            }
-            
-            if (category == Category.CRYPTO) {
-                loadChartData()
+                refreshCryptoUnits()
             }
         }
 
+        binding.editTextFrom.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                performConversion()
+            }
+        })
+        
         binding.autoCompleteFrom.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             fromUnit = units[position]
             performConversion()
@@ -188,16 +227,7 @@ class ConversionFragment : Fragment() {
                 loadChartData()
             }
         }
-    }
-
-    private fun setupInputListeners() {
-        binding.editTextFrom.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                performConversion()
-            }
-        })
+        isListenersSetup = true
     }
 
     private fun setupCryptoUI() {
@@ -241,36 +271,48 @@ class ConversionFragment : Fragment() {
     }
 
     private fun loadChartData() {
+        chartJob?.cancel()
+
         if (category != Category.CRYPTO || fromUnit == null || toUnit == null) return
 
         val (crypto, fiat) = when {
             CryptoRepository.isCrypto(fromUnit!!) -> fromUnit!! to toUnit!!
             CryptoRepository.isCrypto(toUnit!!) -> toUnit!! to fromUnit!!
             else -> {
-                binding.cryptoChart.clear()
-                binding.cryptoChart.setNoDataText("Wykres dostępny tylko dla par z kryptowalutą")
-                binding.cryptoChart.invalidate()
+                if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
+                     binding.cryptoChart.clear()
+                     binding.cryptoChart.setNoDataText("Wykres dostępny tylko dla par z kryptowalutą")
+                     binding.cryptoChart.invalidate()
+                }
                 return
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        chartJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val history = CryptoRepository.getHistoricalData(crypto, fiat, "7")
 
                 if (history.isNotEmpty() && _binding != null) {
                     updateChart(history, "${crypto.symbol}/${fiat.symbol}")
                 } else if (_binding != null) {
-                    binding.cryptoChart.clear()
-                    binding.cryptoChart.setNoDataText("Brak danych historycznych dla tej pary.")
-                    binding.cryptoChart.invalidate()
+                     if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
+                        binding.cryptoChart.clear()
+                        binding.cryptoChart.setNoDataText("Brak danych historycznych dla tej pary.")
+                        binding.cryptoChart.invalidate()
+                    } else {
+                         Toast.makeText(requireContext(), "Nie udało się odświeżyć wykresu", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 if (_binding != null) {
-                    binding.cryptoChart.clear()
-                    binding.cryptoChart.setNoDataText("Błąd ładowania wykresu.")
-                    binding.cryptoChart.invalidate()
+                    if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
+                        binding.cryptoChart.clear()
+                        binding.cryptoChart.setNoDataText("Błąd ładowania wykresu.")
+                        binding.cryptoChart.invalidate()
+                    } else {
+                        Toast.makeText(requireContext(), "Błąd pobierania wykresu (zachowano poprzedni)", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
