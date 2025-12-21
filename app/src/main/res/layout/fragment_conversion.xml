@@ -7,7 +7,6 @@
     android:padding="16dp"
     android:background="?android:attr/colorBackground">
 
-    <!-- Main content container -->
     <ScrollView
         android:id="@+id/mainContent"
         android:layout_width="match_parent"
@@ -19,7 +18,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Karta jednostki początkowej -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardFrom"
                 android:layout_width="match_parent"
@@ -41,7 +39,6 @@
                         style="@style/TextAppearance.Material3.LabelLarge"
                         android:textColor="?attr/colorPrimary" />
 
-                    <!-- Dropdown: Wybór jednostki początkowej -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/menuFromContainer"
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -61,7 +58,6 @@
                             style="@style/TextAppearance.Material3.BodyLarge"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Pole tekstowe: Wartość do konwersji -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/textInputLayoutValue"
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -78,6 +74,9 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="numberDecimal|numberSigned"
+                            android:digits="0123456789,."
+                            android:maxLength="25"
+                            android:imeOptions="actionDone"
                             android:textColor="?attr/colorOnSurface"
                             style="@style/TextAppearance.Material3.HeadlineSmall"/>
                     </com.google.android.material.textfield.TextInputLayout>
@@ -85,7 +84,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Przycisk zamiany -->
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/buttonSwap"
                 android:layout_width="wrap_content"
@@ -99,8 +97,6 @@
                 app:tint="?attr/colorOnSecondary"
                 android:contentDescription="Zamień jednostki" />
 
-
-            <!-- Karta jednostki docelowej -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardTo"
                 android:layout_width="match_parent"
@@ -123,7 +119,6 @@
                         style="@style/TextAppearance.Material3.LabelLarge"
                         android:textColor="?attr/colorPrimary" />
 
-                    <!-- Dropdown: Wybór jednostki docelowej -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/menuToContainer"
                         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -163,7 +158,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Chart Section (Visible only for Crypto) -->
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/cryptoChart"
                 android:layout_width="match_parent"
@@ -171,7 +165,6 @@
                 android:layout_marginTop="24dp"
                 android:visibility="gone" />
 
-            <!-- Przycisk odświeżania (tylko dla krypto) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonRefresh"
                 style="@style/Widget.Material3.Button.TextButton.Icon"
@@ -185,14 +178,11 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textStyle="italic" />
 
-            <!-- Informacja pomocnicza -->
             <TextView
                 android:id="@+id/textViewHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
                 android:text="Wpisz wartość aby zobaczyć konwersję"
                 style="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
@@ -203,7 +193,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Error State Container -->
     <LinearLayout
         android:id="@+id/errorContainer"
         android:layout_width="match_parent"
@@ -211,8 +200,7 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="?android:attr/colorBackground"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/errorText"
@@ -228,7 +216,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Spróbuj ponownie" />
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

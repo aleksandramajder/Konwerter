@@ -1,10 +1,11 @@
 package com.example.konwerter
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Filter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.konwerter.databinding.SettingsActivityBinding
@@ -99,14 +100,23 @@ class SettingsActivity : AppCompatActivity() {
         binding.colorPurple.alpha = if (color == "Purple") 1.0f else 0.5f
     }
 
+    // POPRAWKA 1: Płynna zmiana motywu (bez czarnego ekranu)
     private fun setAppTheme(color: String) {
         PreferencesManager.setColorTheme(this, color)
-        recreate()
+
+        finish()
+        overridePendingTransition(0, 0) // Wyłącz animację wyjścia
+        startActivity(intent)
+        overridePendingTransition(0, 0) // Wyłącz animację wejścia
     }
 
+    // POPRAWKA 2: Użycie NoFilterAdapter
     private fun setupDecimalPlaces() {
         val places = listOf("2", "4", "6", "8", "10")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, places)
+
+        // Używamy naszego specjalnego adaptera zamiast zwykłego ArrayAdapter
+        // Zmieniłem też layout na 'simple_dropdown_item_1line', wygląda lepiej w liście rozwijanej
+        val adapter = NoFilterAdapter(this, android.R.layout.simple_dropdown_item_1line, places)
         binding.autoCompleteDecimalPlaces.setAdapter(adapter)
 
         val currentDecimal = PreferencesManager.getDecimalPlaces(this)
@@ -116,5 +126,26 @@ class SettingsActivity : AppCompatActivity() {
             val selected = places[position].toInt()
             PreferencesManager.setDecimalPlaces(this@SettingsActivity, selected)
         }
+    }
+}
+
+class NoFilterAdapter<T>(context: Context, layout: Int, var values: List<T>) :
+    ArrayAdapter<T>(context, layout, values) {
+
+    private val noOpFilter = object : Filter() {
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            val results = FilterResults()
+            results.values = values
+            results.count = values.size
+            return results
+        }
+
+        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+            notifyDataSetChanged()
+        }
+    }
+
+    override fun getFilter(): Filter {
+        return noOpFilter
     }
 }

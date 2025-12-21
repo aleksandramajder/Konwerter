@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.math.BigDecimal 
 
 object CryptoRepository {
     private val retrofit = Retrofit.Builder()
@@ -92,15 +93,15 @@ object CryptoRepository {
 
     private fun createUnitsFromCache(): List<ConversionUnit> {
         return listOf(
-            ConversionUnit("US Dollar", "USD", 1.0, Category.CRYPTO),
-            ConversionUnit("Polski Złoty", "PLN", cachedPrices["PLN"] ?: 0.25, Category.CRYPTO),
-            ConversionUnit("Euro", "EUR", cachedPrices["EUR"] ?: 1.08, Category.CRYPTO),
-            ConversionUnit("Bitcoin", "BTC", cachedPrices["BTC"] ?: 50000.0, Category.CRYPTO),
-            ConversionUnit("Ethereum", "ETH", cachedPrices["ETH"] ?: 3000.0, Category.CRYPTO),
-            ConversionUnit("Tether", "USDT", cachedPrices["USDT"] ?: 1.0, Category.CRYPTO),
-            ConversionUnit("Solana", "SOL", cachedPrices["SOL"] ?: 100.0, Category.CRYPTO),
-            ConversionUnit("Dogecoin", "DOGE", cachedPrices["DOGE"] ?: 0.1, Category.CRYPTO),
-            ConversionUnit("Cardano", "ADA", cachedPrices["ADA"] ?: 0.5, Category.CRYPTO)
+            ConversionUnit("US Dollar", "USD", BigDecimal.ONE, Category.CRYPTO),
+            ConversionUnit("Polski Złoty", "PLN", BigDecimal.valueOf(cachedPrices["PLN"] ?: 0.25), Category.CRYPTO),
+            ConversionUnit("Euro", "EUR", BigDecimal.valueOf(cachedPrices["EUR"] ?: 1.08), Category.CRYPTO),
+            ConversionUnit("Bitcoin", "BTC", BigDecimal.valueOf(cachedPrices["BTC"] ?: 50000.0), Category.CRYPTO),
+            ConversionUnit("Ethereum", "ETH", BigDecimal.valueOf(cachedPrices["ETH"] ?: 3000.0), Category.CRYPTO),
+            ConversionUnit("Tether", "USDT", BigDecimal.valueOf(cachedPrices["USDT"] ?: 1.0), Category.CRYPTO),
+            ConversionUnit("Solana", "SOL", BigDecimal.valueOf(cachedPrices["SOL"] ?: 100.0), Category.CRYPTO),
+            ConversionUnit("Dogecoin", "DOGE", BigDecimal.valueOf(cachedPrices["DOGE"] ?: 0.1), Category.CRYPTO),
+            ConversionUnit("Cardano", "ADA", BigDecimal.valueOf(cachedPrices["ADA"] ?: 0.5), Category.CRYPTO)
         )
     }
 }

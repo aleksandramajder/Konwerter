@@ -14,6 +14,7 @@ import com.example.konwerter.databinding.ActivityMainBinding
 import com.example.konwerter.ui.adapters.CategoryPagerAdapter
 import com.example.konwerter.utils.PreferencesManager
 import com.google.android.material.tabs.TabLayoutMediator
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,6 +22,9 @@ class MainActivity : AppCompatActivity() {
     private var appliedTheme: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        installSplashScreen()
+
         applyTheme()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)

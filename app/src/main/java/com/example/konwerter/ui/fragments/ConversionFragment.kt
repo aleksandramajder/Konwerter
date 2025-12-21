@@ -6,10 +6,10 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo // Ważny import do obsługi przycisku "Gotowe"
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.konwerter.R
@@ -27,7 +27,9 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,11 +43,23 @@ class ConversionFragment : Fragment() {
     private var units: List<ConversionUnit> = emptyList()
     private var fromUnit: ConversionUnit? = null
     private var toUnit: ConversionUnit? = null
-    private var retryCount = 0
+    private var initialLoadRetryCount = 0
     private var isListenersSetup = false
     private var chartJob: Job? = null
 
+    private var lastRefreshTime = 0L
     private var decimalFormat = DecimalFormat("#.########")
+
+    companion object {
+        private const val ARG_CATEGORY = "category"
+        private const val MIN_REFRESH_INTERVAL = 30000L
+
+        fun newInstance(category: Category): ConversionFragment {
+            return ConversionFragment().apply {
+                arguments = Bundle().apply { putString(ARG_CATEGORY, category.name) }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +69,12 @@ class ConversionFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         if (category == Category.CRYPTO) {
-            loadCryptoUnits(isInitialLoad = true)
+            val timeSinceLastLoad = System.currentTimeMillis() - lastRefreshTime
+            if (units.isEmpty() || timeSinceLastLoad > MIN_REFRESH_INTERVAL) {
+                loadCryptoUnits(isInitialLoad = units.isEmpty())
+            } else {
+                setupUI()
+            }
         } else {
             units = UnitRepository.getUnitsForCategory(category)
             setupUI()
@@ -75,7 +94,11 @@ class ConversionFragment : Fragment() {
     private fun updateDecimalFormat() {
         val decimalPlaces = PreferencesManager.getDecimalPlaces(requireContext())
         val pattern = "#." + "#".repeat(decimalPlaces)
-        decimalFormat = DecimalFormat(pattern)
+
+        val symbols = DecimalFormatSymbols(Locale.getDefault())
+        symbols.decimalSeparator = ','
+
+        decimalFormat = DecimalFormat(pattern, symbols)
     }
 
     private fun loadCryptoUnits(isInitialLoad: Boolean = false, onComplete: (() -> Unit)? = null) {
@@ -87,17 +110,33 @@ class ConversionFragment : Fragment() {
                 units = CryptoRepository.getCryptoUnits()
                 if (_binding != null) {
                     showError(false)
-                    retryCount = 0
+                    lastRefreshTime = System.currentTimeMillis()
+                    if (isInitialLoad) {
+                        initialLoadRetryCount = 0
+                    }
                     onComplete?.invoke() ?: setupUI()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("ConversionFragment", "Błąd ładowania kryptowalut", e)
+
                 if (_binding != null) {
                     if (isInitialLoad) {
                         handleNetworkError()
                     } else {
-                        val message = if (e is java.net.SocketTimeoutException) "Przekroczono limit czasu żądania" else "Nie udało się odświeżyć kursów"
-                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                        val is429Error = e.message?.contains("429") == true
+
+                        val message = when {
+                            is429Error -> "Za dużo zapytań. Poczekaj 30 sekund przed kolejnym odświeżeniem"
+                            e is java.net.SocketTimeoutException -> "Przekroczono limit czasu żądania"
+                            e is java.net.UnknownHostException -> "Brak połączenia z internetem"
+                            e is java.io.IOException -> "Problem z połączeniem. Spróbuj za chwilę"
+                            else -> "Nie udało się odświeżyć kursów: ${e.message ?: "Nieznany błąd"}"
+                        }
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+
+                        if (is429Error) {
+                            lastRefreshTime = System.currentTimeMillis()
+                        }
                     }
                 }
             } finally {
@@ -110,24 +149,43 @@ class ConversionFragment : Fragment() {
     }
 
     private fun refreshCryptoUnits() {
+        val currentTime = System.currentTimeMillis()
+        val timeSinceLastRefresh = currentTime - lastRefreshTime
+
+        if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
+            val remainingSeconds = ((MIN_REFRESH_INTERVAL - timeSinceLastRefresh) / 1000).toInt()
+            Toast.makeText(
+                requireContext(),
+                "Poczekaj $remainingSeconds sek. przed ponownym odświeżeniem",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        lastRefreshTime = currentTime
         val fromSymbol = fromUnit?.symbol
         val toSymbol = toUnit?.symbol
 
-        loadCryptoUnits {
+        CryptoRepository.clearCache()
+
+        loadCryptoUnits(isInitialLoad = false) {
             fromUnit = units.find { it.symbol == fromSymbol } ?: units.getOrNull(0)
             toUnit = units.find { it.symbol == toSymbol } ?: units.getOrNull(1)
 
             setupUI()
+            Toast.makeText(requireContext(), "Kursy zaktualizowane", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun handleNetworkError() {
-        retryCount++
-        if (retryCount > 5) {
-            showError(true, "Błąd sieci. Spróbuj ponownie później.")
+        initialLoadRetryCount++
+        android.util.Log.d("ConversionFragment", "Retry count: $initialLoadRetryCount")
+
+        if (initialLoadRetryCount > 5) {
+            showError(true, "Przekroczono limit prób. Sprawdź połączenie z internetem.")
             binding.retryButton.isEnabled = false
         } else {
-            showError(true, "Brak połączenia z internetem.")
+            showError(true, "Brak połączenia z internetem lub limit zapytań API.")
         }
     }
 
@@ -187,17 +245,42 @@ class ConversionFragment : Fragment() {
     private fun setupInputListeners() {
         if(isListenersSetup) return
 
+        binding.editTextFrom.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                performConversion()
+                hideKeyboard()
+                return@setOnEditorActionListener true
+            }
+            false
+        }
+
         binding.retryButton.setOnClickListener {
+            hideKeyboard()
             binding.retryButton.isEnabled = false
-            retryCount = 0
-            loadCryptoUnits(isInitialLoad = true)
+
+            val timeSinceLastAttempt = System.currentTimeMillis() - lastRefreshTime
+
+            if (timeSinceLastAttempt < MIN_REFRESH_INTERVAL) {
+                val remainingSeconds = ((MIN_REFRESH_INTERVAL - timeSinceLastAttempt) / 1000).toInt()
+                Toast.makeText(
+                    requireContext(),
+                    "Poczekaj jeszcze $remainingSeconds sekund",
+                    Toast.LENGTH_SHORT
+                ).show()
+                binding.retryButton.isEnabled = true
+            } else {
+                initialLoadRetryCount = 0
+                loadCryptoUnits(isInitialLoad = true)
+            }
         }
 
         binding.buttonSwap.setOnClickListener {
+            hideKeyboard()
             swapUnits()
         }
 
         binding.buttonRefresh?.setOnClickListener {
+            hideKeyboard()
             if (category == Category.CRYPTO) {
                 CryptoRepository.clearCache()
                 refreshCryptoUnits()
@@ -211,8 +294,9 @@ class ConversionFragment : Fragment() {
                 performConversion()
             }
         })
-        
+
         binding.autoCompleteFrom.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            hideKeyboard()
             fromUnit = units[position]
             performConversion()
             if (category == Category.CRYPTO) {
@@ -221,6 +305,7 @@ class ConversionFragment : Fragment() {
         }
 
         binding.autoCompleteTo.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            hideKeyboard()
             toUnit = units[position]
             performConversion()
             if (category == Category.CRYPTO) {
@@ -228,6 +313,19 @@ class ConversionFragment : Fragment() {
             }
         }
         isListenersSetup = true
+        binding.editTextFrom.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if ((s?.length ?: 0) >= 25) {
+                    binding.textInputLayoutValue.error = "Maksymalna długość to 25 cyfr"
+                } else {
+                    binding.textInputLayoutValue.error = null // Usuń błąd, jeśli jest OK
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {
+                performConversion()
+            }
+        })
     }
 
     private fun setupCryptoUI() {
@@ -242,6 +340,7 @@ class ConversionFragment : Fragment() {
 
     private fun performConversion() {
         val inputText = binding.editTextFrom.text.toString()
+        val cleanInput = inputText.replace(',', '.') // Zamiana przecinka na kropkę
 
         if (fromUnit == null || toUnit == null) {
             binding.textViewResult.text = "0"
@@ -249,18 +348,18 @@ class ConversionFragment : Fragment() {
         }
 
         if (category == Category.CRYPTO) {
-             binding.buttonSwap.isEnabled = true
-             binding.textViewHint.text = "Wpisz wartość aby zobaczyć konwersję"
-             binding.cryptoChart.visibility = View.VISIBLE
+            binding.buttonSwap.isEnabled = true
+            binding.textViewHint.text = "Wpisz wartość aby zobaczyć konwersję"
+            binding.cryptoChart.visibility = View.VISIBLE
         }
 
-        if (inputText.isEmpty()) {
+        if (cleanInput.isEmpty()) {
             binding.textViewResult.text = "0"
             return
         }
 
         try {
-            val inputValue = inputText.toDouble()
+            val inputValue = BigDecimal(cleanInput)
             val result = Converter.convert(inputValue, fromUnit!!, toUnit!!)
             binding.textViewResult.text = decimalFormat.format(result)
         } catch (e: NumberFormatException) {
@@ -274,15 +373,20 @@ class ConversionFragment : Fragment() {
         chartJob?.cancel()
 
         if (category != Category.CRYPTO || fromUnit == null || toUnit == null) return
+        val typedValue = android.util.TypedValue()
+
+        requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)
+        val textColor = typedValue.data
 
         val (crypto, fiat) = when {
             CryptoRepository.isCrypto(fromUnit!!) -> fromUnit!! to toUnit!!
             CryptoRepository.isCrypto(toUnit!!) -> toUnit!! to fromUnit!!
             else -> {
                 if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
-                     binding.cryptoChart.clear()
-                     binding.cryptoChart.setNoDataText("Wykres dostępny tylko dla par z kryptowalutą")
-                     binding.cryptoChart.invalidate()
+                    binding.cryptoChart.clear()
+                    binding.cryptoChart.setNoDataTextColor(textColor)
+                    binding.cryptoChart.setNoDataText("Wykres dostępny tylko dla par z kryptowalutą")
+                    binding.cryptoChart.invalidate()
                 }
                 return
             }
@@ -295,12 +399,13 @@ class ConversionFragment : Fragment() {
                 if (history.isNotEmpty() && _binding != null) {
                     updateChart(history, "${crypto.symbol}/${fiat.symbol}")
                 } else if (_binding != null) {
-                     if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
+                    if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
                         binding.cryptoChart.clear()
+                        binding.cryptoChart.setNoDataTextColor(textColor)
                         binding.cryptoChart.setNoDataText("Brak danych historycznych dla tej pary.")
                         binding.cryptoChart.invalidate()
                     } else {
-                         Toast.makeText(requireContext(), "Nie udało się odświeżyć wykresu", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Nie udało się odświeżyć wykresu", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -308,6 +413,7 @@ class ConversionFragment : Fragment() {
                 if (_binding != null) {
                     if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
                         binding.cryptoChart.clear()
+                        binding.cryptoChart.setNoDataTextColor(textColor)
                         binding.cryptoChart.setNoDataText("Błąd ładowania wykresu.")
                         binding.cryptoChart.invalidate()
                     } else {
@@ -324,7 +430,7 @@ class ConversionFragment : Fragment() {
         val entries = history.mapIndexed { index, pair ->
             Entry(index.toFloat(), pair.second.toFloat())
         }
-        
+
         val typedValue = android.util.TypedValue()
         requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
         val primaryColor = typedValue.data
@@ -386,18 +492,17 @@ class ConversionFragment : Fragment() {
         loadChartData()
     }
 
+    private fun hideKeyboard() {
+        val inputMethodManager = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        val currentFocusView = view?.findFocus()
+        if (currentFocusView != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocusView.windowToken, 0)
+            currentFocusView.clearFocus()
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        private const val ARG_CATEGORY = "category"
-
-        fun newInstance(category: Category): ConversionFragment {
-            return ConversionFragment().apply {
-                arguments = Bundle().apply { putString(ARG_CATEGORY, category.name) }
-            }
-        }
     }
 }

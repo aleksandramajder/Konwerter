@@ -1,8 +1,10 @@
 package com.example.konwerter.data
 
+import java.math.BigDecimal
+
 data class ConversionUnit(
     val name: String,
     val symbol: String,
-    val toBase: Double,
+    val toBase: BigDecimal,
     val category: Category
 )
