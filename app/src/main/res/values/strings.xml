@@ -1,13 +1,18 @@
 <resources>
     <string name="app_name">Konwerter</string>
+
     <string name="settings">Ustawienia</string>
     <string name="appearance">Wygląd</string>
-    <string name="dark_mode">Tryb ciemny</string>
+    <string name="dark_mode">Motyw aplikacji</string>
     <string name="theme_color">Kolor motywu</string>
     <string name="calculation">Obliczenia</string>
     <string name="decimal_places">Miejsca po przecinku</string>
-    <string name="choose_color">Wybierz kolor</string>
-    <string name="choose_theme_mode">Wybierz tryb</string>
+
+    <string name="theme_auto">Auto</string>
+    <string name="theme_light">Jasny</string>
+    <string name="theme_dark">Ciemny</string>
+    <string name="privacy_policy">Polityka Prywatności</string>
+    <string name="done">Gotowe</string>
 
     <string name="privacy_policy_html">
         <![CDATA[
@@ -21,4 +26,5 @@
             <p>W przypadku pytań dotyczących tej Polityki Prywatności, prosimy o kontakt pod adresem: aleksandradevv@gmail.com</p>
         ]]>
     </string>
+
 </resources>

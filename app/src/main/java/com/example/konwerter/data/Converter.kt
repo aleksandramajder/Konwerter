@@ -29,19 +29,19 @@ object Converter {
 
         val celsius = when (fromUnit.symbol) {
             "°C" -> value
-            "°F" -> value.subtract(offsetF, MC).multiply(five, MC).divide(nine, MC) // (F - 32) * 5 / 9
+            "°F" -> value.subtract(offsetF, MC).multiply(five, MC).divide(nine, MC)
             "K" -> {
                 if (value < BigDecimal.ZERO) throw IllegalArgumentException("Temperatura w Kelwinach nie może być ujemna")
-                value.subtract(offsetK, MC) // K - 273.15
+                value.subtract(offsetK, MC)
             }
             else -> value
         }
 
         return when (toUnit.symbol) {
             "°C" -> celsius
-            "°F" -> celsius.multiply(nine, MC).divide(five, MC).add(offsetF, MC) // (C * 9 / 5) + 32
+            "°F" -> celsius.multiply(nine, MC).divide(five, MC).add(offsetF, MC)
             "K" -> {
-                val kelvin = celsius.add(offsetK, MC) // C + 273.15
+                val kelvin = celsius.add(offsetK, MC)
                 if (kelvin < BigDecimal.ZERO) throw IllegalArgumentException("Wynik nie może być ujemny w Kelwinach")
                 kelvin
             }

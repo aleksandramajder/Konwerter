@@ -6,7 +6,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo // Ważny import do obsługi przycisku "Gotowe"
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -319,7 +319,7 @@ class ConversionFragment : Fragment() {
                 if ((s?.length ?: 0) >= 25) {
                     binding.textInputLayoutValue.error = "Maksymalna długość to 25 cyfr"
                 } else {
-                    binding.textInputLayoutValue.error = null // Usuń błąd, jeśli jest OK
+                    binding.textInputLayoutValue.error = null
                 }
             }
             override fun afterTextChanged(s: Editable?) {
@@ -340,8 +340,7 @@ class ConversionFragment : Fragment() {
 
     private fun performConversion() {
         val inputText = binding.editTextFrom.text.toString()
-        val cleanInput = inputText.replace(',', '.') // Zamiana przecinka na kropkę
-
+        val cleanInput = inputText.replace(',', '.')
         if (fromUnit == null || toUnit == null) {
             binding.textViewResult.text = "0"
             return
@@ -350,7 +349,6 @@ class ConversionFragment : Fragment() {
         if (category == Category.CRYPTO) {
             binding.buttonSwap.isEnabled = true
             binding.textViewHint.text = "Wpisz wartość aby zobaczyć konwersję"
-            binding.cryptoChart.visibility = View.VISIBLE
         }
 
         if (cleanInput.isEmpty()) {
@@ -379,15 +377,16 @@ class ConversionFragment : Fragment() {
         val textColor = typedValue.data
 
         val (crypto, fiat) = when {
-            CryptoRepository.isCrypto(fromUnit!!) -> fromUnit!! to toUnit!!
-            CryptoRepository.isCrypto(toUnit!!) -> toUnit!! to fromUnit!!
+            CryptoRepository.isCrypto(fromUnit!!) -> {
+                binding.cryptoChart.visibility = View.VISIBLE
+                fromUnit!! to toUnit!!
+            }
+            CryptoRepository.isCrypto(toUnit!!) -> {
+                binding.cryptoChart.visibility = View.VISIBLE
+                toUnit!! to fromUnit!!
+            }
             else -> {
-                if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
-                    binding.cryptoChart.clear()
-                    binding.cryptoChart.setNoDataTextColor(textColor)
-                    binding.cryptoChart.setNoDataText("Wykres dostępny tylko dla par z kryptowalutą")
-                    binding.cryptoChart.invalidate()
-                }
+                binding.cryptoChart.visibility = View.GONE
                 return
             }
         }

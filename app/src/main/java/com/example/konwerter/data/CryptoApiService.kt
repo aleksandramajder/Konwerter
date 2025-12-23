@@ -8,7 +8,6 @@ interface CryptoApiService {
     @GET("simple/price?ids=bitcoin,ethereum,tether,solana,dogecoin,cardano&vs_currencies=usd,pln,eur")
     suspend fun getCryptoPrices(): CoinGeckoResponse
 
-    // New method for chart data (market chart)
     @GET("coins/{id}/market_chart")
     suspend fun getMarketChart(
         @Path("id") id: String,

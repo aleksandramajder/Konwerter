@@ -100,22 +100,18 @@ class SettingsActivity : AppCompatActivity() {
         binding.colorPurple.alpha = if (color == "Purple") 1.0f else 0.5f
     }
 
-    // POPRAWKA 1: Płynna zmiana motywu (bez czarnego ekranu)
     private fun setAppTheme(color: String) {
         PreferencesManager.setColorTheme(this, color)
 
         finish()
-        overridePendingTransition(0, 0) // Wyłącz animację wyjścia
+        overridePendingTransition(0, 0)
         startActivity(intent)
-        overridePendingTransition(0, 0) // Wyłącz animację wejścia
+        overridePendingTransition(0, 0)
     }
 
-    // POPRAWKA 2: Użycie NoFilterAdapter
     private fun setupDecimalPlaces() {
         val places = listOf("2", "4", "6", "8", "10")
 
-        // Używamy naszego specjalnego adaptera zamiast zwykłego ArrayAdapter
-        // Zmieniłem też layout na 'simple_dropdown_item_1line', wygląda lepiej w liście rozwijanej
         val adapter = NoFilterAdapter(this, android.R.layout.simple_dropdown_item_1line, places)
         binding.autoCompleteDecimalPlaces.setAdapter(adapter)
 
@@ -125,6 +121,8 @@ class SettingsActivity : AppCompatActivity() {
         binding.autoCompleteDecimalPlaces.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             val selected = places[position].toInt()
             PreferencesManager.setDecimalPlaces(this@SettingsActivity, selected)
+
+            binding.autoCompleteDecimalPlaces.clearFocus()
         }
     }
 }

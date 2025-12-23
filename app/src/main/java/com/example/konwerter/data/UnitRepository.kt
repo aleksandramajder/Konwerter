@@ -26,7 +26,7 @@ object UnitRepository {
             ConversionUnit("Mikrometr", "µm", BigDecimal("0.000001"), Category.LENGTH),
             ConversionUnit("Nanometr", "nm", BigDecimal("0.000000001"), Category.LENGTH),
             ConversionUnit("Mila lądowa", "mi", BigDecimal("1609.344"), Category.LENGTH),
-            ConversionUnit("Mila morska", "nmi", BigDecimal("1852"), Category.LENGTH), // Nowe
+            ConversionUnit("Mila morska", "nmi", BigDecimal("1852"), Category.LENGTH),
             ConversionUnit("Jard", "yd", BigDecimal("0.9144"), Category.LENGTH),
             ConversionUnit("Stopa", "ft", BigDecimal("0.3048"), Category.LENGTH),
             ConversionUnit("Cal", "in", BigDecimal("0.0254"), Category.LENGTH)
