@@ -332,6 +332,21 @@ class ConversionFragment : Fragment() {
         if (category == Category.CRYPTO) {
             binding.buttonRefresh?.visibility = View.VISIBLE
             binding.cryptoChart.visibility = View.VISIBLE
+
+            try {
+                val typedValue = android.util.TypedValue()
+                requireContext().theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
+                val themeColor = typedValue.data
+
+                binding.cryptoChart.setNoDataTextColor(themeColor)
+                binding.cryptoChart.setNoDataText("Wybierz kryptowalutę, aby zobaczyć wykres")
+
+                binding.cryptoChart.description.isEnabled = false
+
+                binding.cryptoChart.invalidate()
+            } catch (e: Exception) {
+            }
+
         } else {
             binding.buttonRefresh?.visibility = View.GONE
             binding.cryptoChart.visibility = View.GONE
@@ -373,8 +388,8 @@ class ConversionFragment : Fragment() {
         if (category != Category.CRYPTO || fromUnit == null || toUnit == null) return
         val typedValue = android.util.TypedValue()
 
-        requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)
-        val textColor = typedValue.data
+        requireContext().theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
+        val themeColor = typedValue.data
 
         val (crypto, fiat) = when {
             CryptoRepository.isCrypto(fromUnit!!) -> {
@@ -400,8 +415,10 @@ class ConversionFragment : Fragment() {
                 } else if (_binding != null) {
                     if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
                         binding.cryptoChart.clear()
-                        binding.cryptoChart.setNoDataTextColor(textColor)
-                        binding.cryptoChart.setNoDataText("Brak danych historycznych dla tej pary.")
+
+                        binding.cryptoChart.setNoDataTextColor(themeColor)
+                        binding.cryptoChart.setNoDataText("Brak danych historycznych")
+
                         binding.cryptoChart.invalidate()
                     } else {
                         Toast.makeText(requireContext(), "Nie udało się odświeżyć wykresu", Toast.LENGTH_SHORT).show()
@@ -412,8 +429,10 @@ class ConversionFragment : Fragment() {
                 if (_binding != null) {
                     if (binding.cryptoChart.data == null || binding.cryptoChart.data.entryCount == 0) {
                         binding.cryptoChart.clear()
-                        binding.cryptoChart.setNoDataTextColor(textColor)
-                        binding.cryptoChart.setNoDataText("Błąd ładowania wykresu.")
+
+                        binding.cryptoChart.setNoDataTextColor(themeColor)
+                        binding.cryptoChart.setNoDataText("Błąd ładowania wykresu")
+
                         binding.cryptoChart.invalidate()
                     } else {
                         Toast.makeText(requireContext(), "Błąd pobierania wykresu (zachowano poprzedni)", Toast.LENGTH_SHORT).show()
@@ -431,7 +450,7 @@ class ConversionFragment : Fragment() {
         }
 
         val typedValue = android.util.TypedValue()
-        requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
+        requireContext().theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
         val primaryColor = typedValue.data
 
         val dataSet = LineDataSet(entries, label).apply {
